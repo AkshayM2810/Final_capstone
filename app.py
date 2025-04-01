@@ -2,7 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-# Load your trained model
+# Load the trained pipeline
 model = joblib.load('final_logistic_model.pkl')
 
 st.set_page_config(page_title="Credit Risk Prediction", layout="centered")
@@ -24,23 +24,30 @@ with st.form("input_form"):
 
 # Run prediction
 if submitted:
-    # Create a DataFrame with correct column names
-    input_dict = {
-        'total_credit_utilized': [total_credit_utilized],
-        'total_credit_limit': [total_credit_limit],
-        'debt_to_income': [debt_to_income],
-        'annual_income': [annual_income],
-        'interest_rate': [interest_rate],
-        'loan_amount': [loan_amount],
-        'account_never_delinq_percent': [account_never_delinq_percent],
-        'inquiries_last_12m': [inquiries_last_12m]
-    }
-
-    input_df = pd.DataFrame(input_dict)
+    # Create input DataFrame with correct column names and order
+    input_data = pd.DataFrame([[
+        total_credit_utilized,
+        total_credit_limit,
+        debt_to_income,
+        annual_income,
+        interest_rate,
+        loan_amount,
+        account_never_delinq_percent,
+        inquiries_last_12m
+    ]], columns=[
+        'total_credit_utilized',
+        'total_credit_limit',
+        'debt_to_income',
+        'annual_income',
+        'interest_rate',
+        'loan_amount',
+        'account_never_delinq_percent',
+        'inquiries_last_12m'
+    ])
 
     # Make prediction
-    prediction = model.predict(input_df)[0]
-    probability = model.predict_proba(input_df)[0][1]
+    prediction = model.predict(input_data)[0]
+    probability = model.predict_proba(input_data)[0][1]
 
     # Show result
     st.success(f"🔮 Prediction: {'High Risk (1)' if prediction == 1 else 'Low Risk (0)'}")
