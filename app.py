@@ -2,15 +2,15 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-# Load the trained pipeline
+# Load trained model
 model = joblib.load('final_logistic_model.pkl')
 
-# Set up the Streamlit page
+# Set page
 st.set_page_config(page_title="Credit Risk Prediction", layout="centered")
 st.title("📊 Credit Risk Predictor")
 st.markdown("Enter applicant information below to predict loan approval risk.")
 
-# Input form for user data
+# Input form
 with st.form("input_form"):
     total_credit_utilized = st.number_input("Total Credit Utilized", min_value=0.0, step=100.0)
     total_credit_limit = st.number_input("Total Credit Limit", min_value=0.0, step=100.0)
@@ -23,30 +23,35 @@ with st.form("input_form"):
 
     submitted = st.form_submit_button("Predict")
 
-# Run prediction if form is submitted
+# Prediction
 if submitted:
-    # Dynamically get expected feature names from the pipeline
-    expected_features = model.named_steps['logr'].feature_names_in_
+    # Manually define feature names in the exact training order
+    feature_names = [
+        'total_credit_utilized',
+        'total_credit_limit',
+        'debt_to_income',
+        'annual_income',
+        'interest_rate',
+        'loan_amount',
+        'account_never_delinq_percent',
+        'inquiries_last_12m'
+    ]
 
-    # Map form input to dictionary
-    input_values = {
-        'total_credit_utilized': total_credit_utilized,
-        'total_credit_limit': total_credit_limit,
-        'debt_to_income': debt_to_income,
-        'annual_income': annual_income,
-        'interest_rate': interest_rate,
-        'loan_amount': loan_amount,
-        'account_never_delinq_percent': account_never_delinq_percent,
-        'inquiries_last_12m': inquiries_last_12m
-    }
+    input_data = pd.DataFrame([[
+        total_credit_utilized,
+        total_credit_limit,
+        debt_to_income,
+        annual_income,
+        interest_rate,
+        loan_amount,
+        account_never_delinq_percent,
+        inquiries_last_12m
+    ]], columns=feature_names)
 
-    # Ensure correct order of features
-    ordered_input = [[input_values[feature] for feature in expected_features]]
-    input_data = pd.DataFrame(ordered_input, columns=expected_features)
-
-    # Predict and show result
+    # Make prediction
     prediction = model.predict(input_data)[0]
     probability = model.predict_proba(input_data)[0][1]
 
+    # Display result
     st.success(f"🔮 Prediction: {'High Risk (1)' if prediction == 1 else 'Low Risk (0)'}")
     st.info(f"📈 Probability of High Risk: {probability:.2%}")
